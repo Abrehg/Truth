@@ -17,24 +17,19 @@ def Encoder():
 
     #generating input tensors
     input_body = keras.Input(shape=(None, units))
-    input_sender = keras.Input(shape = (None, 1))
-    input_subject = keras.Input(shape=(None, units))
+    input_headline = keras.Input(shape = (None, units))
 
     #Process body
     body = add_positional_encodings(input_body)
     body = tfl.MultiHeadAttention(num_heads=16, key_dim=units, dropout=0.3)(body, body)
 
     #Process subject
-    subject = add_positional_encodings(input_subject)
-    subject = tfl.MultiHeadAttention(num_heads=16, key_dim=units, dropout=0.3)(subject, subject)
-
-    #Proces sender
-    sender = tfl.Dense(units=units, activation='linear')(input_sender)
-    sender = tfl.MultiHeadAttention(num_heads=16, key_dim=units, dropout=0.3)(sender, sender)
+    headline = add_positional_encodings(input_headline)
+    headline = tfl.MultiHeadAttention(num_heads=16, key_dim=units, dropout=0.3)(headline, headline)
 
     #Combine all tensors
-    combined_sub_send = tf.matmul(subject, sender, transpose_b=True)
-    combined_features = tf.matmul(combined_sub_send, body)
+    combined = tf.matmul(body, headline, transpose_b=True)
+    combined_features = tf.matmul(combined, body)
     input2 = tfl.LayerNormalization()(combined_features)
 
     #Rest of first encoder layer
@@ -56,7 +51,7 @@ def Encoder():
     X = tf.add(X, input2)
     output = tfl.LayerNormalization()(X)
 
-    model = keras.Model(inputs=[input_sender, input_subject, input_body], outputs=output)
+    model = keras.Model(inputs=[input_headline, input_body], outputs=output)
     return model
 
 def positional_encoding(seq_len, d_model):
