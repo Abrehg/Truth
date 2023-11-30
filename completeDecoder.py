@@ -1,8 +1,6 @@
 import tensorflow as tf
 from tensorflow import keras as keras
 from keras import layers as tfl
-from formatText import formatText
-from formatText import findWord
 from encoder import Encoder
 from decoder import transformer_decoder_layer
 import tensorflow_datasets as tfds
@@ -73,7 +71,7 @@ combined_model.compile(optimizer='adam', loss=custom_loss)
 
 # Print the model summary
 combined_model.summary()
-
+"""
 #text summarization training
 dataset_name = 'multi_news'
 (train_data, val_data, test_data), info = tfds.load(dataset_name, split=['train', 'validation', 'test'], shuffle_files=True, with_info=True)
@@ -113,3 +111,4 @@ print("test set implemented")
 #save desired weights
 textEnc.save_weights('./text_encoder_weights.h5')
 print("process finished")
+"""

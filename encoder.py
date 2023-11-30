@@ -2,12 +2,9 @@ import tensorflow as tf
 from tensorflow import keras as keras
 from keras import layers as tfl
 
-#Modify to process subject, sender, and body at the same time and then combine
-#use GloVe for subject and body, then use ASCII characters for sender
-
 def Encoder():
     NNLayers = 3
-    units = 300
+    units = 100
 
     def feedForwardNN(baseInput):
         X = baseInput
@@ -16,15 +13,19 @@ def Encoder():
         return X
 
     #generating input tensors
-    input_body = keras.Input(shape=(None, units))
-    input_headline = keras.Input(shape = (None, units))
+    input_body = keras.Input(shape=(None, 1))
+    input_headline = keras.Input(shape = (None, 1))
 
     #Process body
-    body = add_positional_encodings(input_body)
+    body = tfl.Dense(units = 50, activation= 'relu')(input_body)
+    body = tfl.Dense(units = units, activation= 'relu')(body)
+    body = add_positional_encodings(body)
     body = tfl.MultiHeadAttention(num_heads=16, key_dim=units, dropout=0.3)(body, body)
 
-    #Process subject
-    headline = add_positional_encodings(input_headline)
+    #Process headline
+    headline = tfl.Dense(units = 50, activation= 'relu')(input_headline)
+    headline = tfl.Dense(units = units, activation= 'relu')(headline)
+    headline = add_positional_encodings(headline)
     headline = tfl.MultiHeadAttention(num_heads=16, key_dim=units, dropout=0.3)(headline, headline)
 
     #Combine all tensors
