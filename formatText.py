@@ -21,7 +21,9 @@ def formatOutputText(output):
     output = sp.decode_ids(tempList)
     return output
 
-#ids = formatInputText("This is a test!")
-#out = formatOutputText(ids)
+ids = formatInputText("This is a test!")
+print(tf.shape(ids))
+out = formatOutputText(ids)
+print(out)
 #print(out)
 #print('eos=', sp.eos_id())

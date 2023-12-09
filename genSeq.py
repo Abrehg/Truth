@@ -1,14 +1,13 @@
 import tensorflow as tf
-from tensorflow import keras as keras
+import keras
 from keras import layers as tfl
-from encoder import Encoder
-from decoder import transformer_decoder_layer
-import tensorflow_datasets as tfds
+from decoder import transDec
+#import tensorflow_datasets as tfds
 from keras import backend as K
 
 eos_token = tf.zeros((1, 300))
 
-def beam_search_generate_sequence(encoder_output, start_token):
+def beamSearchGenerateSequence(encoder_output, start_token):
     beam_size = 5
     max_length = 2000
     sequences = [start_token]
@@ -16,11 +15,11 @@ def beam_search_generate_sequence(encoder_output, start_token):
     for _ in range(max_length):
         all_candidates = []
         for seq in sequences:
-            if seq[-1] is eos_token:  # Check if the last token is EOS token
+            if seq[-1] == eos_token:
                 all_candidates.append(seq)
                 continue
             sequence_tensor = tf.expand_dims(seq, axis=0)
-            decoder_output = transformer_decoder_layer(sequence_tensor, encoder_output)
+            decoder_output = transDec(sequence_tensor, encoder_output)
             candidate_token = tfl.GlobalAveragePooling1D()(decoder_output)
             candidate_seq = tf.concat([seq, candidate_token], axis=0)
             all_candidates.append((candidate_seq, tf.reduce_sum(candidate_token)))
@@ -30,7 +29,8 @@ def beam_search_generate_sequence(encoder_output, start_token):
 
     return sequences[0][:-1]
 
-def cosine_similarity_loss(y_true, y_pred):
+#change to BLEU score
+def BLEU_loss(y_true, y_pred):
     y_true = K.l2_normalize(y_true, axis=-1)
     y_pred = K.l2_normalize(y_pred, axis=-1)
     cosine_sim = K.sum(y_true * y_pred, axis=-1)
@@ -38,39 +38,17 @@ def cosine_similarity_loss(y_true, y_pred):
     return similarity
 
 def custom_loss(y_true, y_pred):
-    similarity_loss = cosine_similarity_loss(y_true, y_pred)
+    similarity_loss = BLEU_loss(y_true, y_pred)
     
     max_length = 2000
     sequence_length = K.shape(y_pred)[1]
     length_penalty = K.maximum(0.0, sequence_length / max_length - 1.0)
     
-    total_loss = similarity_loss + 0.25 * length_penalty  # Adjust the weight of the length penalty
+    total_loss = similarity_loss + 0.25 * length_penalty
     
     return total_loss
 
-# input tensor
-inputEmbeddings = keras.Input((None, 300))
 
-#generate encoder output (works)
-textEnc = Encoder()
-encoder_output = textEnc(inputEmbeddings)
-
-# condense encoder output into a start token
-X = tfl.GlobalAveragePooling1D()(encoder_output)
-start_token = tfl.Dense(300, 'relu')(X)
-
-# Generate a sequence using transformer decoder
-generated_sequence = beam_search_generate_sequence(encoder_output, start_token)
-
-print("Generated Sequence:", generated_sequence)
-
-# Create the combined model
-combined_model = keras.Model(inputs=inputEmbeddings, outputs=generated_sequence)
-
-combined_model.compile(optimizer='adam', loss=custom_loss)
-
-# Print the model summary
-combined_model.summary()
 """
 #text summarization training
 dataset_name = 'multi_news'

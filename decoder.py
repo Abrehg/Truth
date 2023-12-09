@@ -1,5 +1,4 @@
 import tensorflow as tf
-from tensorflow import keras
 from keras import layers as tfl
 
 #positional encoding function
@@ -16,7 +15,7 @@ def positional_encoding(inputs):
     return angle_rads
 
 #Single decoder layer (typical layer used for chat GPT, BERT, and more)
-def transformer_decoder_layer(inputs, enc_output):
+def transDec(inputs, enc_output):
     pos_encodings = positional_encoding(inputs)
     vec = tf.add(inputs, pos_encodings)
     X = tfl.MultiHeadAttention(num_heads=16, key_dim=100, dropout=0.3)(vec, vec)
