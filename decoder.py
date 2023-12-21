@@ -1,5 +1,6 @@
 import tensorflow as tf
 from keras import layers as tfl
+import keras
 
 #positional encoding function
 def positional_encoding(inputs):
@@ -15,7 +16,7 @@ def positional_encoding(inputs):
     return angle_rads
 
 #Single decoder layer (typical layer used for chat GPT, BERT, and more)
-def transDec(inputs, enc_output):
+def transDecHead(inputs, enc_output):
     pos_encodings = positional_encoding(inputs)
     vec = tf.add(inputs, pos_encodings)
     X = tfl.MultiHeadAttention(num_heads=16, key_dim=100, dropout=0.3)(vec, vec)
@@ -30,4 +31,23 @@ def transDec(inputs, enc_output):
     norm3 = tfl.LayerNormalization()(add3)
     outputs = tfl.Dense(50, 'linear')(norm3)
     outputs = tfl.Dense(1, 'linear')(norm3)
-    return outputs
+    model = keras.Model(inputs=[inputs, enc_output], outputs=outputs)
+    return model
+
+def transDecBody(inputs, enc_output):
+    pos_encodings = positional_encoding(inputs)
+    vec = tf.add(inputs, pos_encodings)
+    X = tfl.MultiHeadAttention(num_heads=16, key_dim=100, dropout=0.3)(vec, vec)
+    add1 = tf.add(X, vec)
+    norm1 = tfl.LayerNormalization()(add1)
+    enc = tfl.MultiHeadAttention(num_heads=16, key_dim=100, dropout=0.3)(enc_output, enc_output, norm1)
+    add2 = tf.add(enc, norm1)
+    norm2 = tfl.LayerNormalization()(add2)
+    ffn1 = tfl.Dense(512, activation='relu')(norm2)
+    ffn2 = tfl.Dense(100, activation='relu')(ffn1)
+    add3 = tf.add(ffn2, norm2)
+    norm3 = tfl.LayerNormalization()(add3)
+    outputs = tfl.Dense(50, 'linear')(norm3)
+    outputs = tfl.Dense(1, 'linear')(norm3)
+    model = keras.Model(inputs=[inputs, enc_output], outputs=outputs)
+    return model
