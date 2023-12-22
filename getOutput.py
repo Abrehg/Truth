@@ -1,5 +1,3 @@
-import tensorflow as tf
-import keras
 from keras import layers as tfl
 from genSeq import beamSearchGenerateSequenceBody, beamSearchGenerateSequenceHead
 from encoder import Encoder
