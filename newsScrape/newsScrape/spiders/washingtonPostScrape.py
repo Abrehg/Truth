@@ -6,12 +6,12 @@ from newsScrape.items import NewsscrapeItem
 class WashingtonPostSpider(scrapy.Spider):
     name = "washington_post"
     start_urls = [
-        "https://www.washingtonpost.com/"#,
-        #"https://www.washingtonpost.com/politics/",
-        #"https://www.washingtonpost.com/business/technology/",
-        #"https://www.washingtonpost.com/world/",
-        #"https://www.washingtonpost.com/local/?%20va.",
-        #"https://www.washingtonpost.com/sports/"
+        "https://www.washingtonpost.com/",
+        "https://www.washingtonpost.com/politics/",
+        "https://www.washingtonpost.com/business/technology/",
+        "https://www.washingtonpost.com/world/",
+        "https://www.washingtonpost.com/local/?%20va.",
+        "https://www.washingtonpost.com/sports/"
     ]
 
     custom_settings = {
