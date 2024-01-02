@@ -15,7 +15,7 @@ def positional_encoding(inputs):
     angle_rads = tf.expand_dims(angle_rads, axis=0)
     return angle_rads
 
-#Single decoder layer (typical layer used for chat GPT, BERT, and more)
+#Single decoder layer for input headline (typical layer used for chat GPT, BERT, and more)
 def transDecHead(inputs, enc_output):
     pos_encodings = positional_encoding(inputs)
     vec = tf.add(inputs, pos_encodings)
@@ -34,6 +34,7 @@ def transDecHead(inputs, enc_output):
     model = keras.Model(inputs=[inputs, enc_output], outputs=outputs)
     return model
 
+#Single decoder layer for input body (typical layer used for chat GPT, BERT, and more)
 def transDecBody(inputs, enc_output):
     pos_encodings = positional_encoding(inputs)
     vec = tf.add(inputs, pos_encodings)

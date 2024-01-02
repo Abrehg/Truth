@@ -2,9 +2,11 @@ import numpy as np
 import sentencepiece as spm
 import tensorflow as tf
 
+#Load in local model for text to vec
 sp = spm.SentencePieceProcessor()
 sp.load('m.model')
 
+#Convert Input string into vector of ints
 def formatInputText(text):
     embeddings = sp.encode_as_ids(text)
     newEmbed = []
@@ -14,6 +16,7 @@ def formatInputText(text):
     embeddings = np.array(newEmbed)
     return embeddings
 
+#Convert Input vector of ints into string
 def formatOutputText(output):
     tempList = []
     for i in range(0, len(output)):
@@ -21,8 +24,5 @@ def formatOutputText(output):
     output = sp.decode_ids(tempList)
     return output
 
-ids = formatInputText("This is a test!")
-print(tf.shape(ids))
-out = formatOutputText(ids)
-print(out)
+#Defining EOS token for future use
 eos_token = sp.eos_id()

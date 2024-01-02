@@ -1,14 +1,15 @@
 import tensorflow as tf
-from tensorflow import keras as keras
+import keras
 from keras import layers as tfl
 
 def Encoder():
     NNLayers = 3
     units = 100
 
+    #General neural network step
     def feedForwardNN(baseInput):
         X = baseInput
-        for k in range(0, NNLayers):
+        for _ in range(0, NNLayers):
             X = tfl.Dense(activation='relu', units=units)(X)
         return X
 
@@ -55,6 +56,7 @@ def Encoder():
     model = keras.Model(inputs=[input_headline, input_body], outputs=output)
     return model
 
+#Generating positional encodings
 def positional_encoding(seq_len, d_model):
 
     position = tf.range(seq_len, dtype=tf.float32)
@@ -70,6 +72,7 @@ def positional_encoding(seq_len, d_model):
 
     return encodings
 
+#Adding generated positional encodings to input vector
 def add_positional_encodings(word_vectors):
     seq_length = tf.shape(word_vectors)[1]
     d_model = tf.shape(word_vectors)[2]
