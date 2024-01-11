@@ -1,13 +1,13 @@
 import scrapy
 from time import sleep
-from newsScrape.items import NewsscrapeItem
 from datetime import datetime, timedelta
 import dateparser
+from dataParse import addToDatabase
 
 #scrapy crawl washington_post -o washPost.csv
 
 class WashingtonPostSpider(scrapy.Spider):
-    name = 'washington_post'
+    name = 'new_washington_post'
     start_urls = [
         "https://www.washingtonpost.com/politics/",
         "https://www.washingtonpost.com/business/technology/",
@@ -40,7 +40,7 @@ class WashingtonPostSpider(scrapy.Spider):
         for article_div in article_divs:
             article_link = article_div.css('a[data-pb-local-content-field="web_headline"]::attr(href)').get()
             if article_link:
-                print(article_link)
+                print
                 if article_link not in self.visited_urls:
                     self.visited_urls.add(article_link)
                     yield scrapy.Request(url=article_link, callback=self.parse_article)
@@ -63,7 +63,7 @@ class WashingtonPostSpider(scrapy.Spider):
             sleep(1)
 
     def parse_article(self, response):
-        item = NewsscrapeItem()
+        #item = NewsscrapeItem()
 
         # Extract data from the article page
         title = response.css('h3[data-qa="card-title"]::text').get()
@@ -99,17 +99,11 @@ class WashingtonPostSpider(scrapy.Spider):
         srcset = response.css('div[data-testid="lede-art"] img::attr(srcset)').get()
         if srcset is not None:
             image_urls = [url.strip() for url in srcset.split(',') if url]
-            
-        item["title"] = title
-        item["link"] = response.url
-        item["content"] = content
-        item["provider"] = "Washington Post"
 
-        # Set the adjusted timestamp to the item
-        item["publish_date"] = adjusted_date.strftime("%Y-%m-%d %H:%M:%S")
-        item["image_urls"] = image_urls if image_urls else []
+        image_urls = image_urls if image_urls else []
 
-        yield item
+        #Add all new items to database
+        addToDatabase(title, response.url, content, "Washington Post", adjusted_date.strftime("%Y-%m-%d %H:%M:%S"), image_urls)
     
     def save_visited_urls(self):
         with open('visited_urls_Wash.txt', 'w') as file:

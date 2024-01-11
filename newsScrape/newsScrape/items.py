@@ -12,3 +12,4 @@ class NewsscrapeItem(scrapy.Item):
     content = scrapy.Field()
     provider = scrapy.Field()
     publish_date = scrapy.Field()
+    image_urls = scrapy.Field()
