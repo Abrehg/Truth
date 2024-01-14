@@ -64,6 +64,48 @@ session.close()
 #5 -> images (thumbnails)
     #resolution, path
 
+#Define BLEU score as loss 
+def bleu_score(reference, candidate, weights=(0.375, 0.25, 0.125, 0.25)):
+    #Find reference and candidate length
+    candidate_len = len(candidate.split())
+    reference_len = [len(ref.split()) for ref in reference]
+
+    clipped_counts = [0] * 4
+    candidate_ngrams = [candidate.split()[i:i + n] for n in range(1, 5) for i in range(len(candidate.split()) - n + 1)]
+
+    #Find frequency values for each N-Gram sequence present in both candidate and reference
+    for n in range(1, 5):
+        candidate_ngram_counts = Counter(candidate_ngrams)
+        clipped_ngram_counts = {}
+
+        for ref in reference:
+            reference_ngrams = [ref.split()[i:i + n] for i in range(len(ref.split()) - n + 1)]
+            reference_ngram_counts = Counter(reference_ngrams)
+
+            for ngram, count in candidate_ngram_counts.items():
+                clipped_ngram_counts[ngram] = min(count, reference_ngram_counts.get(ngram, 0))
+
+        clipped_counts[n - 1] = sum(clipped_ngram_counts.values())
+
+    precision = [clipped / max(candidate_len, 1) for clipped in clipped_counts]
+    geometric_mean = np.exp(np.sum(weights * np.log(precision)))
+
+    brevity_penalty = min(1, np.exp(1 - (min(reference_len, key=lambda x: abs(x - candidate_len)) / candidate_len)))
+
+    #Combind brevity and geometric mean into final output
+    bleu = brevity_penalty * geometric_mean
+    return bleu
+
+#Use BLEU score to create loss between 0 and 1
+def bleu_loss(y_true, y_pred):
+    total_bleu = 0.0
+
+    for reference in y_true:
+        total_bleu += bleu_score(reference, y_pred)
+
+    avg_bleu = total_bleu / len(y_true)
+    return 1 - avg_bleu
+
 dataDir = "/Users/adityaasuratkal/Downloads/Thumbnails"
 
 def addToDatabase(title, link, content, provider, publish_date, image_urls):
@@ -87,7 +129,7 @@ def addToDatabase(title, link, content, provider, publish_date, image_urls):
         totScoreDate = 0
 
         #Find date score (difference in time by scale of 6 hours)
-        date1 = datetime.strptime(row[3], "%Y-%m-%d %H:%M:%S")
+        date1 = row[3]
         date2 = datetime.strptime(publish_date, "%Y-%m-%d %H:%M:%S")
         deltaTime = date1 - date2
         deltaTime = deltaTime.total_seconds()/3600
@@ -200,44 +242,4 @@ def addCSVs(filePath):
             result_list = [item.strip() for item in row["image_urls"].split(',')]
             addToDatabase(row["title"], row["link"], row["content"], row["provider"], row["publish_date"], result_list)
 
-#Define BLEU score as loss 
-def bleu_score(reference, candidate, weights=(0.375, 0.25, 0.125, 0.25)):
-    #Find reference and candidate length
-    candidate_len = len(candidate.split())
-    reference_len = [len(ref.split()) for ref in reference]
-
-    clipped_counts = [0] * 4
-    candidate_ngrams = [candidate.split()[i:i + n] for n in range(1, 5) for i in range(len(candidate.split()) - n + 1)]
-
-    #Find frequency values for each N-Gram sequence present in both candidate and reference
-    for n in range(1, 5):
-        candidate_ngram_counts = Counter(candidate_ngrams)
-        clipped_ngram_counts = {}
-
-        for ref in reference:
-            reference_ngrams = [ref.split()[i:i + n] for i in range(len(ref.split()) - n + 1)]
-            reference_ngram_counts = Counter(reference_ngrams)
-
-            for ngram, count in candidate_ngram_counts.items():
-                clipped_ngram_counts[ngram] = min(count, reference_ngram_counts.get(ngram, 0))
-
-        clipped_counts[n - 1] = sum(clipped_ngram_counts.values())
-
-    precision = [clipped / max(candidate_len, 1) for clipped in clipped_counts]
-    geometric_mean = np.exp(np.sum(weights * np.log(precision)))
-
-    brevity_penalty = min(1, np.exp(1 - (min(reference_len, key=lambda x: abs(x - candidate_len)) / candidate_len)))
-
-    #Combind brevity and geometric mean into final output
-    bleu = brevity_penalty * geometric_mean
-    return bleu
-
-#Use BLEU score to create loss between 0 and 1
-def bleu_loss(y_true, y_pred):
-    total_bleu = 0.0
-
-    for reference in y_true:
-        total_bleu += bleu_score(reference, y_pred)
-
-    avg_bleu = total_bleu / len(y_true)
-    return 1 - avg_bleu
+addCSVs("/Users/adityaasuratkal/Downloads/GitHub/Truth/newsScrape/washPost4.csv")
